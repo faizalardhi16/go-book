@@ -1,6 +1,7 @@
 package user
 
 import (
+	"errors"
 	"go-book/constant"
 
 	"github.com/google/uuid"
@@ -10,6 +11,7 @@ import (
 type Service interface {
 	CreateUser(input RegisterInput) (User, error)
 	GetUserByEmail(email CheckEmailInput) (bool, error)
+	Login(login LoginInput) (User, error)
 }
 
 type service struct {
@@ -60,5 +62,30 @@ func (s *service) GetUserByEmail(email CheckEmailInput) (bool, error) {
 	}
 
 	return false, nil
+
+}
+
+func (s *service) Login(login LoginInput) (User, error) {
+	email := CheckEmailInput{}
+
+	email.Email = login.Email
+
+	user, err := s.repository.FindByEmail(email)
+
+	if err != nil {
+		return user, err
+	}
+
+	if user.ID == "" {
+		return user, errors.New("User not found")
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(login.Password))
+
+	if err != nil {
+		return user, err
+	}
+
+	return user, nil
 
 }

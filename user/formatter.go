@@ -9,7 +9,7 @@ type RegisterUserResponse struct {
 	Token     string `json:"token"`
 }
 
-func FormatRegisterUser(user User) RegisterUserResponse {
+func FormatRegisterUser(user User, token string) RegisterUserResponse {
 	format := RegisterUserResponse{}
 
 	format.FirstName = user.FirstName
@@ -17,7 +17,7 @@ func FormatRegisterUser(user User) RegisterUserResponse {
 	format.Email = user.Email
 	format.Role = user.Role
 	format.ID = user.ID
-	format.Token = "123"
+	format.Token = token
 
 	return format
 }

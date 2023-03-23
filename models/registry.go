@@ -14,6 +14,7 @@ type Model struct {
 func RegisterModel() []Model {
 	return []Model{
 		{Model: User{}},
+		{Model: Category{}},
 	}
 }
 
