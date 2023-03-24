@@ -1,9 +1,14 @@
 package category
 
-import "github.com/google/uuid"
+import (
+	"fmt"
+
+	"github.com/google/uuid"
+)
 
 type Service interface {
 	SaveCategory(input CategoryInput) (Category, error)
+	FindCategoryName(input string) (bool, error)
 }
 
 type service struct {
@@ -26,4 +31,20 @@ func (s *service) SaveCategory(input CategoryInput) (Category, error) {
 	}
 
 	return categories, nil
+}
+
+func (s *service) FindCategoryName(input string) (bool, error) {
+	category, err := s.repository.CheckCategoryAvailability(input)
+
+	if err != nil {
+		return false, err
+	}
+
+	fmt.Println(category, "CATEGORY")
+
+	if category.ID == "" {
+		return true, nil
+	}
+
+	return false, nil
 }

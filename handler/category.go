@@ -28,6 +28,22 @@ func (h *categoryHandler) CreateCategoryHandler(c *gin.Context) {
 		return
 	}
 
+	isAvailable, err := h.categoryService.FindCategoryName(input.CategoryName)
+
+	if err != nil {
+		errors := helper.FormatValidationError(err)
+		errorMessage := gin.H{"errors": errors}
+		response := helper.APIResponse("Failed to create category", http.StatusUnprocessableEntity, "error", errorMessage)
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+
+	if !isAvailable {
+		response := helper.APIResponse("Failed to save category, category is registered", http.StatusUnprocessableEntity, "error", nil)
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+
 	newCategory, err := h.categoryService.SaveCategory(input)
 
 	if err != nil {

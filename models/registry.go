@@ -15,6 +15,8 @@ func RegisterModel() []Model {
 	return []Model{
 		{Model: User{}},
 		{Model: Category{}},
+		{Model: Author{}},
+		{Model: Book{}},
 	}
 }
 

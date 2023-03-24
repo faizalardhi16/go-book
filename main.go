@@ -2,6 +2,8 @@ package main
 
 import (
 	"go-book/auth"
+	"go-book/author"
+	"go-book/book"
 	"go-book/category"
 	"go-book/handler"
 	"go-book/helper"
@@ -43,15 +45,21 @@ func main() {
 	//repository
 	userRepo := user.NewRepositoryUser(db)
 	categoryRepo := category.NewCategoryRepository(db)
+	authorRepo := author.NewAuthorRepository(db)
+	bookRepo := book.NewBookRepository(db)
 
 	//service
 	userService := user.NewServiceUser(userRepo)
 	authService := auth.NewService()
 	categoryService := category.NewCategoryService(categoryRepo)
+	authorService := author.NewAuthorService(authorRepo)
+	bookService := book.NewBookService(bookRepo, authorRepo, categoryRepo)
 
 	//handler
 	userHandler := handler.NewHandlerUser(userService, authService)
 	categoryHandler := handler.NewCategoryHandler(categoryService)
+	authorHandler := handler.NewAuthorHandler(authorService)
+	bookHandler := handler.NewBookHandler(bookService)
 
 	router := gin.Default()
 	router.Use(cors.New(cors.Config{
@@ -68,11 +76,20 @@ func main() {
 	api.GET(("/"), func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, "HELLO")
 	})
+
 	//POST
 	api.POST("/user", userHandler.RegisterUserHandler)
 	api.POST("/email-check", userHandler.CheckEmailAvailibility)
 	api.POST("/login", userHandler.LoginUserHandler)
 	api.POST("/category", authMiddleware(authService, userService), categoryHandler.CreateCategoryHandler)
+	api.POST("/author", authMiddleware(authService, userService), authorHandler.CreateAuthorHandler)
+	api.POST("/book", authMiddleware(authService, userService), bookHandler.CreateBookHandler)
+
+	//DELETE
+	api.DELETE("/author", authMiddleware(authService, userService), authorHandler.DeleteAuthorHandler)
+
+	//GET
+	api.GET("/book", bookHandler.GetAllBook)
 
 	router.Run()
 
@@ -112,7 +129,7 @@ func authMiddleware(authService auth.Service, userService user.Service) gin.Hand
 			return
 		}
 
-		user := claim["user"].(user.User)
+		user := claim["user"].(interface{})
 
 		c.Set("CurrentUser", user)
 
