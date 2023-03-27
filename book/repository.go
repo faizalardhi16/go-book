@@ -35,7 +35,19 @@ func (r *repository) GetBook() ([]Book, error) {
 	var singleBook Book
 	var getBook []GetBook
 
-	err := r.db.Model(&Book{}).Select("books.id, author_name, category_name, author_id, category_id, title, description").
+	err := r.db.Model(&Book{}).Create(map[string]interface{}{
+		"id": "books.id",
+		"author": map[string]interface{}{
+			"authorName": "author_name",
+			"id":         "author_id",
+		},
+		"category": map[string]interface{}{
+			"categoryName": "category_name",
+			"id":           "author_id",
+		},
+		"title":       "books.title",
+		"description": "books.description",
+	}).Select("books.id, author_name, category_name, author_id, category_id, title, description").
 		Joins("JOIN authors a ON a.id = books.author_id").
 		Joins("JOIN categories c ON c.id = books.category_id").
 		Scan(&getBook).Error

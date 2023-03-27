@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"go-book/auth"
 	"go-book/author"
 	"go-book/book"
@@ -11,34 +12,37 @@ import (
 	"go-book/user"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 func main() {
-	var envs map[string]string
-	envs, err := godotenv.Read(".env")
+	dsn := fmt.Sprintf(
+		"host=db user=%s password=%s dbname=%s port=5432 sslmode=disable TimeZone=Asia/Shanghai",
+		os.Getenv("DB_USER"),
+		os.Getenv("DB_PASSWORD"),
+		os.Getenv("DB_NAME"),
+	)
+
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
+	})
+
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Fatal("Failed to connect to database. \n", err)
+		os.Exit(2)
 	}
 
-	dbConnect := envs["DB_SOURCE"]
-
-	dsn := dbConnect
-
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-
-	if err != nil {
-		log.Fatal("Cannot Connect to DB")
-	}
+	fmt.Sprintln("Migration starting")
 
 	models.RegistryDatabase(db)
 
@@ -91,7 +95,7 @@ func main() {
 	//GET
 	api.GET("/book", bookHandler.GetAllBook)
 
-	router.Run()
+	router.Run(":9000")
 
 }
 
@@ -129,7 +133,7 @@ func authMiddleware(authService auth.Service, userService user.Service) gin.Hand
 			return
 		}
 
-		user := claim["user"].(interface{})
+		user := claim["user"]
 
 		c.Set("CurrentUser", user)
 
